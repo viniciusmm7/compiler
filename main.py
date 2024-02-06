@@ -60,10 +60,7 @@ class Compiler:
             print(self.result)
 
 
-try:
+if __name__ == '__main__':
     input_op = argv[1]
     compiler = Compiler(input_op)
     compiler.compile()
-    
-except SyntaxError as e:
-    print("SyntaxError:", e)
