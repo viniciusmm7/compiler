@@ -39,7 +39,7 @@ class Parser:
         return result
 
     @staticmethod
-    def run(code: str) -> None:
+    def run(code: str):
         tokenizer: Tokenizer = Tokenizer(code)
         tokenizer.select_next()
         result = Parser.parse_expression(tokenizer)

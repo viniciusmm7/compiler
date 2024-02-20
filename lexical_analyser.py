@@ -16,7 +16,7 @@ class Tokenizer:
         self.position: int = 0
         self.next: Token
 
-    def select_next(self) -> None | Exception:
+    def select_next(self):
         while self.position <= len(self.source):
             if self.position == len(self.source):
                 self.next = Token('EOF', '')
