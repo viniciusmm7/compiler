@@ -40,6 +40,9 @@ class Parser:
 
     @staticmethod
     def run(code: str):
+        if not code:
+            raise ValueError('The code cannot be empty')
+        
         tokenizer: Tokenizer = Tokenizer(code)
         tokenizer.select_next()
         result = Parser.parse_expression(tokenizer)
