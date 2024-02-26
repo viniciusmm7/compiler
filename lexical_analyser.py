@@ -45,5 +45,15 @@ class Tokenizer:
                 self.next = Token('MINUS', '-')
                 self.position += 1
                 return
+            
+            if self.source[self.position] == '*':
+                self.next = Token('MULT', '*')
+                self.position += 1
+                return
+            
+            if self.source[self.position] == '/':
+                self.next = Token('DIV', '/')
+                self.position += 1
+                return
 
             raise LexicalError(f'Invalid token "{self.source[self.position]}" at position {self.position}')
