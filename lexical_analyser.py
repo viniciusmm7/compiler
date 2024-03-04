@@ -55,5 +55,15 @@ class Tokenizer:
                 self.next = Token('DIV', '/')
                 self.position += 1
                 return
+            
+            if self.source[self.position] == '(':
+                self.next = Token('LPAREN', '(')
+                self.position += 1
+                return
+            
+            if self.source[self.position] == ')':
+                self.next = Token('RPAREN', ')')
+                self.position += 1
+                return
 
             raise LexicalError(f'Invalid token "{self.source[self.position]}" at position {self.position}')
