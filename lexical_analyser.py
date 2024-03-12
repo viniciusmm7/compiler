@@ -1,7 +1,17 @@
+from re import sub
+
+
 class LexicalError(Exception):
     def __init__(self, message: str):
         self.message: str = message
         super().__init__(self.message)
+
+
+class PrePro:
+    @staticmethod
+    def filter(source: str) -> str:
+        source = sub(r'--.*?\n', '', source)
+        return source
 
 
 class Token:
@@ -16,7 +26,8 @@ class Tokenizer:
         self.position: int = 0
         self.next: Token
 
-    def select_next(self):
+
+    def select_next(self) -> None | LexicalError:
         while self.position <= len(self.source):
             if self.position == len(self.source):
                 self.next = Token('EOF', '')

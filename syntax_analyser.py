@@ -1,25 +1,23 @@
-from lexical_analyser import Tokenizer
+from lexical_analyser import Tokenizer, PrePro
+from data_structures import Node, BinOp, UnOp, IntVal
 
 
 class Parser:
     @staticmethod
-    def parse_factor(tokenizer: Tokenizer) -> int:
+    def parse_factor(tokenizer: Tokenizer) -> Node:
         if tokenizer.next.type == 'INT':
-            result = tokenizer.next.value
+            token = tokenizer.next.value
             tokenizer.select_next()
-            return result
+            return IntVal(token, [])
         
-        elif tokenizer.next.type == 'PLUS':
+        elif tokenizer.next.type == 'PLUS' or tokenizer.next.type == 'MINUS':
+            token = tokenizer.next.value
             tokenizer.select_next()
-            return Parser.parse_factor(tokenizer)
-        
-        elif tokenizer.next.type == 'MINUS':
-            tokenizer.select_next()
-            return -Parser.parse_factor(tokenizer)
+            return UnOp(token, [Parser.parse_factor(tokenizer)])
         
         elif tokenizer.next.type == 'LPAREN':
             tokenizer.select_next()
-            result = Parser.parse_expression(tokenizer)
+            result: Node = Parser.parse_expression(tokenizer)
             
             if tokenizer.next.type != 'RPAREN':
                 raise SyntaxError(f'Missing closing parenthesis at position "{tokenizer.position}"')
@@ -32,46 +30,42 @@ class Parser:
             
     
     @staticmethod
-    def parse_term(tokenizer: Tokenizer) -> int:
-        result = Parser.parse_factor(tokenizer)
+    def parse_term(tokenizer: Tokenizer) -> Node:
+        result: Node = Parser.parse_factor(tokenizer)
         
         while tokenizer.next.type in ['MULT', 'DIV']:
-            if tokenizer.next.type == 'MULT':
-                tokenizer.select_next()
-                result *= Parser.parse_factor(tokenizer)
-                
-            elif tokenizer.next.type == 'DIV':
-                tokenizer.select_next()
-                result //= Parser.parse_factor(tokenizer)
+            token = tokenizer.next.value
+            tokenizer.select_next()
+            result = BinOp(token, [result, Parser.parse_factor(tokenizer)])
             
         return result
 
 
     @staticmethod
-    def parse_expression(tokenizer: Tokenizer) -> int:
-        result = Parser.parse_term(tokenizer)
+    def parse_expression(tokenizer: Tokenizer) -> Node:
+        result: Node = Parser.parse_term(tokenizer)
         
         while tokenizer.next.type in ['PLUS', 'MINUS']:
-            if tokenizer.next.type == 'PLUS':
-                tokenizer.select_next()
-                result += Parser.parse_term(tokenizer)
-                
-            elif tokenizer.next.type == 'MINUS':
-                tokenizer.select_next()
-                result -= Parser.parse_term(tokenizer)
+            token = tokenizer.next.value
+            tokenizer.select_next()
+            result = BinOp(token, [result, Parser.parse_term(tokenizer)])
             
         return result
 
+
     @staticmethod
-    def run(code: str):
+    def run(code: str) -> Node:
         if not code:
             raise ValueError('The code cannot be empty')
         
+        code = PrePro.filter(code)
+        
         tokenizer: Tokenizer = Tokenizer(code)
         tokenizer.select_next()
+        
         result = Parser.parse_expression(tokenizer)
         
         if tokenizer.next.type != 'EOF':
             raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
         
-        print(result)
+        return result
