@@ -10,7 +10,8 @@ class LexicalError(Exception):
 class PrePro:
     @staticmethod
     def filter(source: str) -> str:
-        source = sub(r'--.*?\n', '', source)
+        source = sub(r'\n', '', source)
+        source = sub(r'--.*?(?=\n|$)', '', source)
         return source
 
 
@@ -27,7 +28,7 @@ class Tokenizer:
         self.next: Token
 
 
-    def select_next(self) -> None | LexicalError:
+    def select_next(self) -> None:
         while self.position <= len(self.source):
             if self.position == len(self.source):
                 self.next = Token('EOF', '')

@@ -13,7 +13,7 @@ class Node(ABC):
     
 
 class BinOp(Node):
-    def evaluate(self) -> int | ValueError:
+    def evaluate(self) -> int:
         left_node: Node = self.children[0]
         right_node: Node = self.children[1]
         
@@ -36,7 +36,7 @@ class BinOp(Node):
     
 
 class UnOp(Node):
-    def evaluate(self) -> int | ValueError:
+    def evaluate(self) -> int:
         child_node: Node = self.children[0]
         child_value: int = child_node.evaluate()
         
@@ -50,7 +50,7 @@ class UnOp(Node):
 
 
 class IntVal(Node):
-    def evaluate(self) -> int | ValueError:
+    def evaluate(self) -> int:
         if not isinstance(self.value, int):
             raise ValueError(f'Invalid value "{self.value}"')
 
