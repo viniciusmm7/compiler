@@ -9,7 +9,7 @@ def main() -> None:
 
     ast = Parser.run(code)
     result = SemanticAnalyser.run(ast)
-    print(f'Resultado: {result}')
+    print(result)
 
 
 if __name__ == '__main__':
