@@ -72,6 +72,12 @@ class NoOp(Node):
         pass
 
 
+class IdentifierNode(Node):
+    def evaluate(self, symbol_table: SymbolTable) -> int:
+        key: str = self.value
+        return symbol_table.get(key)
+
+
 class Assignment(Node):
     def evaluate(self, symbol_table: SymbolTable) -> int:
         key: str = self.children[0]

@@ -15,9 +15,9 @@ class PrePro:
 
 
 class Token:
-    def __init__(self, token_type: str, value: str | int):
+    def __init__(self, token_type: str, value: any):
         self.type: str = token_type
-        self.value: str | int = value
+        self.value: any = value
 
 
 class Tokenizer:

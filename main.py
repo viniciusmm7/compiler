@@ -11,7 +11,6 @@ def main() -> None:
     symbol_table: SymbolTable = SymbolTable()
     ast: Node = Parser.run(code, symbol_table)
     result: int = SemanticAnalyser.run(ast, symbol_table)
-    print(result)
 
 
 if __name__ == '__main__':

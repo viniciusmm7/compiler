@@ -1,5 +1,5 @@
 from lexical_analyser import Tokenizer, PrePro
-from data_structures import Node, BinOp, UnOp, IntVal, NoOp, Assignment, PrintNode, BlockNode, SymbolTable
+from data_structures import Node, BinOp, UnOp, IntVal, NoOp, IdentifierNode, Assignment, PrintNode, BlockNode, SymbolTable
 
 
 class Parser:
@@ -13,12 +13,7 @@ class Parser:
         elif tokenizer.next.type == 'IDENTIFIER':
             identifier = tokenizer.next.value
             tokenizer.select_next()
-
-            if tokenizer.next.type == 'ASSIGN':
-                assignment_token = tokenizer.next.value
-                tokenizer.select_next()
-                expression = Parser.parse_expression(tokenizer, symbol_table)
-                return Assignment(assignment_token, [identifier, expression])
+            return IdentifierNode(identifier, [])
 
         elif tokenizer.next.type == 'PLUS' or tokenizer.next.type == 'MINUS':
             token = tokenizer.next.value
@@ -34,6 +29,9 @@ class Parser:
 
             tokenizer.select_next()
             return result
+
+        elif tokenizer.next.type == 'NEWLINE':
+            return NoOp(None, [])
 
         else:
             raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
@@ -65,7 +63,7 @@ class Parser:
         if tokenizer.next.type == 'NEWLINE':
             token = tokenizer.next.value
             tokenizer.select_next()
-            return NoOp(token, [])
+            return NoOp(None, [])
 
         if tokenizer.next.type == 'IDENTIFIER':
             identifier = tokenizer.next.value
@@ -76,7 +74,7 @@ class Parser:
                 tokenizer.select_next()
                 expression = Parser.parse_expression(tokenizer, symbol_table)
 
-                if tokenizer.next.type == 'NEWLINE':
+                if tokenizer.next.type in ['NEWLINE', 'EOF']:
                     tokenizer.select_next()
                     return Assignment(assignment_token, [identifier, expression])
 
@@ -95,7 +93,7 @@ class Parser:
                 if tokenizer.next.type == 'RPAREN':
                     tokenizer.select_next()
 
-                    if tokenizer.next.type == 'NEWLINE' or tokenizer.next.type == 'EOF':
+                    if tokenizer.next.type in ['NEWLINE', 'EOF']:
                         tokenizer.select_next()
                         return PrintNode(token, [expression])
 
