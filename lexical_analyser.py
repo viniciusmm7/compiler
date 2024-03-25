@@ -58,8 +58,12 @@ class Tokenizer:
             if self.source[self.position].isdigit():
                 start = self.position
 
-                while self.position < len(self.source) and self.source[self.position].isdigit():
+                while True:
                     self.position += 1
+                    if self.source[self.position].isalpha():
+                        raise LexicalError(f'Invalid token "{self.source[self.position]}" at position {self.position}')
+                    if self.position < len(self.source) and not self.source[self.position].isdigit():
+                        break
 
                 self.next = Token('INT', int(self.source[start:self.position]))
                 return

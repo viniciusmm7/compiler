@@ -75,7 +75,10 @@ class NoOp(Node):
 class IdentifierNode(Node):
     def evaluate(self, symbol_table: SymbolTable) -> int:
         key: str = self.value
-        return symbol_table.get(key)
+        value: int = symbol_table.get(key)
+        if value is None:
+            raise ValueError(f'Undefined variable "{key}"')
+        return value
 
 
 class Assignment(Node):
