@@ -64,7 +64,7 @@ class Parser:
             tokenizer.select_next()
             return data_structures.NoOp(None, [])
 
-        if tokenizer.next.type == 'IDENTIFIER':
+        elif tokenizer.next.type == 'IDENTIFIER':
             identifier = tokenizer.next.value
             tokenizer.select_next()
 
@@ -72,20 +72,14 @@ class Parser:
                 assignment_token = tokenizer.next.value
                 tokenizer.select_next()
 
-                if tokenizer.next.type not in ['INT', 'IDENTIFIER', 'LPAREN']:
-                    raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
+                if tokenizer.next.type in ['INT', 'IDENTIFIER', 'LPAREN']:
+                    expression = Parser.parse_expression(tokenizer, symbol_table)
 
-                expression = Parser.parse_expression(tokenizer, symbol_table)
+                    if tokenizer.next.type in ['NEWLINE', 'EOF']:
+                        tokenizer.select_next()
+                        return data_structures.Assignment(assignment_token, [identifier, expression])
 
-                if tokenizer.next.type in ['NEWLINE', 'EOF']:
-                    tokenizer.select_next()
-                    return data_structures.Assignment(assignment_token, [identifier, expression])
-
-                raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
-
-            raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
-
-        if tokenizer.next.type == 'PRINT':
+        elif tokenizer.next.type == 'PRINT':
             token = tokenizer.next.value
             tokenizer.select_next()
 
@@ -100,11 +94,7 @@ class Parser:
                         tokenizer.select_next()
                         return data_structures.PrintNode(token, [expression])
 
-                    raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
-
-                raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
-
-            raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
+        raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
 
     @staticmethod
     def parse_block(tokenizer: Tokenizer, symbol_table: data_structures.SymbolTable) -> data_structures.Node:
