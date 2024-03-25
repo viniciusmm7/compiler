@@ -161,3 +161,6 @@ cython_debug/
 
 # Lua file test
 *.lua
+
+# PyCharm folder
+.idea/
