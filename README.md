@@ -7,9 +7,13 @@
 
 ## EBNF:
 ```
-EXPRESSION = TERM, {("+" | "-"), TERM} ;
-TERM = FACTOR, {("*" | "/"), FACTOR} ;
-FACTOR = NUMBER | ("+" | "-") FACTOR | "(" EXPRESSION ")" ;
+BLOCK = {STATEMENT} ;
+STATEMENT = (IDENTIFIER "=" EXPRESSION) | ("print" "(" EXPRESSION ")") "\n" ;
+EXPRESSION = TERM {("+" | "-") TERM} ;
+TERM = FACTOR {("*" | "/") FACTOR} ;
+FACTOR = NUMBER | IDENTIFIER | ("+" | "-") FACTOR | "(" EXPRESSION ")" ;
+IDENTIFIER = LETTER, {LETTER | DIGIT | "_"} ;
 NUMBER = DIGIT, {DIGIT} ;
-DIGIT = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 ;
+LETTER = "a".."z" | "A".."Z" ;
+DIGIT = 0..9 ;
 ```
