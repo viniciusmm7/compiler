@@ -46,7 +46,7 @@ class Tokenizer:
                 self.position += 1
                 return
 
-            if self.source[self.position] == ' ':
+            if self.source[self.position] in [' ', '\t']:
                 self.position += 1
                 continue
 
@@ -85,7 +85,7 @@ class Tokenizer:
                     self.next = Token('EQUAL', '==')
                     self.position += 2
                     return
-                
+
                 self.next = Token('ASSIGN', '=')
                 self.position += 1
                 return

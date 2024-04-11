@@ -1,6 +1,6 @@
 from sys import argv
 from syntax_analyser import Parser
-from semantic_analyser import SemanticAnalyser, Tree, SymbolTable
+from semantic_analyser import SemanticAnalyser, Node, SymbolTable
 
 
 def main() -> None:
@@ -8,7 +8,7 @@ def main() -> None:
         code = file.read()
 
     symbol_table: SymbolTable = SymbolTable()
-    ast: Tree = Parser.run(code, symbol_table)
+    ast: Node = Parser.run(code, symbol_table)
     result: int = SemanticAnalyser.run(ast, symbol_table)
 
 

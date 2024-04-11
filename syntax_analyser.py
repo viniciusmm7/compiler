@@ -22,7 +22,7 @@ class Parser:
 
         elif tokenizer.next.type == 'LPAREN':
             tokenizer.select_next()
-            result: Node = Parser.parse_expression(tokenizer, symbol_table)
+            result: Node = Parser.parse_bool_expression(tokenizer, symbol_table)
 
             if tokenizer.next.type == 'RPAREN':
                 tokenizer.select_next()
@@ -117,17 +117,12 @@ class Parser:
             if tokenizer.next.type == 'ASSIGN':
                 assignment_token = tokenizer.next.value
                 tokenizer.select_next()
+                expression = Parser.parse_bool_expression(tokenizer, symbol_table)
 
-                if tokenizer.next.type in ['INT', 'IDENTIFIER', 'LPAREN']:
-                    expression = Parser.parse_bool_expression(tokenizer, symbol_table)
+                if tokenizer.next.type in ['NEWLINE', 'EOF']:
+                    return Assignment(assignment_token, [identifier, expression])
 
-                    if tokenizer.next.type in ['NEWLINE', 'EOF']:
-                        tokenizer.select_next()
-                        return Assignment(assignment_token, [identifier, expression])
-
-                    raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
-
-                raise SyntaxError(f'The variable "{identifier}" must be assigned to INT, IDENTIFIER or EXPRESSION')
+                raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
 
             raise SyntaxError(f'"{identifier}" is missing assignment operator at position "{tokenizer.position}"')
 
@@ -143,7 +138,6 @@ class Parser:
                     tokenizer.select_next()
 
                     if tokenizer.next.type in ['NEWLINE', 'EOF']:
-                        tokenizer.select_next()
                         return PrintNode(token, [expression])
 
                     raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
@@ -155,10 +149,12 @@ class Parser:
         elif tokenizer.next.type == 'IF':
             tokenizer.select_next()
             condition = Parser.parse_bool_expression(tokenizer, symbol_table)
-            if_node = IfNode('IF', [])
-            if_node.children[0] = condition
-            if_node.children[1] = BlockNode('BLOCK', [])
-            if_node.children[2] = BlockNode('BLOCK', [])
+            children = [
+                condition,
+                BlockNode('IF_BLOCK', []),
+                BlockNode('ELSE_BLOCK', [])
+            ]
+            if_node = IfNode('IF', children)
 
             if tokenizer.next.type == 'THEN':
                 tokenizer.select_next()
@@ -167,8 +163,11 @@ class Parser:
                     tokenizer.select_next()
 
                     while tokenizer.next.type not in ['END', 'ELSE']:
-                        if_node.children[1].children.append(Parser.parse_statement(tokenizer, symbol_table))
-                        tokenizer.select_next()
+                        if_statement = Parser.parse_statement(tokenizer, symbol_table)
+                        if_node.children[1].children.append(if_statement)
+
+                        if tokenizer.next.type not in ['END', 'ELSE']:
+                            tokenizer.select_next()
 
                     if tokenizer.next.type == 'ELSE':
                         tokenizer.select_next()
@@ -177,7 +176,8 @@ class Parser:
                             tokenizer.select_next()
 
                             while tokenizer.next.type != 'END':
-                                if_node.children[2].children.append(Parser.parse_statement(tokenizer, symbol_table))
+                                else_statement = Parser.parse_statement(tokenizer, symbol_table)
+                                if_node.children[2].children.append(else_statement)
                                 tokenizer.select_next()
 
                         else:
@@ -185,7 +185,9 @@ class Parser:
 
                     if tokenizer.next.type == 'END':
                         tokenizer.select_next()
-                        return if_node
+
+                        if tokenizer.next.type in ['NEWLINE', 'EOF']:
+                            return if_node
 
                     raise SyntaxError(f'If statement must terminate with "end" at position "{tokenizer.position}"')
 
@@ -196,9 +198,11 @@ class Parser:
         elif tokenizer.next.type == 'WHILE':
             tokenizer.select_next()
             condition = Parser.parse_bool_expression(tokenizer, symbol_table)
-            while_node = WhileNode('WHILE', [])
-            while_node.children[0] = condition
-            while_node.children[1] = BlockNode('BLOCK', [])
+            children = [
+                condition,
+                BlockNode('WHILE_BLOCK', [])
+            ]
+            while_node = WhileNode('WHILE', children)
 
             if tokenizer.next.type == 'DO':
                 tokenizer.select_next()
@@ -207,12 +211,15 @@ class Parser:
                     tokenizer.select_next()
 
                     while tokenizer.next.type != 'END':
-                        while_node.children[1].children.append(Parser.parse_statement(tokenizer, symbol_table))
+                        statement = Parser.parse_statement(tokenizer, symbol_table)
+                        while_node.children[1].children.append(statement)
                         tokenizer.select_next()
 
                     if tokenizer.next.type == 'END':
                         tokenizer.select_next()
-                        return while_node
+
+                        if tokenizer.next.type in ['NEWLINE', 'EOF']:
+                            return while_node
 
                     raise SyntaxError(f'While statement must terminate with "end" at position "{tokenizer.position}"')
 

@@ -12,16 +12,14 @@ class SymbolTable:
         self.table[key] = value
 
 
-class Tree(ABC):
-    @abstractmethod
-    def evaluate(self, symbol_table: SymbolTable) -> any:
-        pass
-
-
-class Node(ABC, Tree):
+class Node(ABC):
     def __init__(self, value: any, children: list) -> None:
         self.value: any = value
         self.children: list[Node | str] = children
+
+    @abstractmethod
+    def evaluate(self, symbol_table: SymbolTable) -> any:
+        pass
 
 
 class BinOp(Node):
@@ -53,10 +51,10 @@ class BinOp(Node):
         elif self.value == '<':
             return left < right
 
-        elif self.value == 'AND':
+        elif self.value == 'and':
             return left and right
 
-        elif self.value == 'OR':
+        elif self.value == 'or':
             return left or right
 
         raise ValueError(f'Invalid operator "{self.value}"')
@@ -73,7 +71,7 @@ class UnOp(Node):
         elif self.value == '-':
             return -child_value
 
-        elif self.value == 'NOT':
+        elif self.value == 'not':
             return not child_value
 
         raise ValueError(f'Invalid operator "{self.value}"')
@@ -152,5 +150,5 @@ class ReadNode(Node):
 
 class SemanticAnalyser:
     @staticmethod
-    def run(ast: Tree, symbol_table: SymbolTable = SymbolTable()) -> int:
+    def run(ast: Node, symbol_table: SymbolTable = SymbolTable()) -> int:
         return ast.evaluate(symbol_table)
