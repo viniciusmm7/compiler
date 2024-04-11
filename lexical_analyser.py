@@ -25,7 +25,19 @@ class Tokenizer:
         self.source: str = source
         self.position: int = 0
         self.next: Token | None = None
-        self.keywords: set[str] = {'print'}
+        self.keywords: set[str] = {
+            'print',
+            'or',
+            'and',
+            'while',
+            'do',
+            'end',
+            'if',
+            'then',
+            'else',
+            'not',
+            'read',
+            }
 
     def select_next(self) -> None:
         while self.position <= len(self.source):
@@ -68,6 +80,16 @@ class Tokenizer:
                 self.next = Token('INT', int(self.source[start:self.position]))
                 return
 
+            if self.source[self.position] == '=':
+                if self.source[self.position + 1] == '=':
+                    self.next = Token('EQUAL', '==')
+                    self.position += 2
+                    return
+                
+                self.next = Token('ASSIGN', '=')
+                self.position += 1
+                return
+            
             if self.source[self.position] == '+':
                 self.next = Token('PLUS', '+')
                 self.position += 1
@@ -98,8 +120,13 @@ class Tokenizer:
                 self.position += 1
                 return
 
-            if self.source[self.position] == '=':
-                self.next = Token('ASSIGN', '=')
+            if self.source[self.position] == '>':
+                self.next = Token('GREATERTHAN', '>')
+                self.position += 1
+                return
+            
+            if self.source[self.position] == '<':
+                self.next = Token('LESSTHAN', '<')
                 self.position += 1
                 return
 
