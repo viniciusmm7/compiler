@@ -103,6 +103,8 @@ class Assignment(Node):
     def evaluate(self, symbol_table: SymbolTable) -> int:
         key: str = self.children[0]
         value: int = self.children[1].evaluate(symbol_table)
+        if not isinstance(value, int):
+            raise ValueError(f'Invalid value "{value}"')
         symbol_table.set(key, value)
         return value
 
