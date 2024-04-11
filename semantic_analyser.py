@@ -23,7 +23,7 @@ class Node(ABC):
 
 
 class BinOp(Node):
-    def evaluate(self, symbol_table: SymbolTable) -> int | bool:
+    def evaluate(self, symbol_table: SymbolTable) -> any:
         left_node: Node = self.children[0]
         right_node: Node = self.children[1]
 
