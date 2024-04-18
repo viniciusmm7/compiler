@@ -30,18 +30,28 @@ class BinOp(Node):
         left: any = left_node.evaluate(symbol_table)
         right: any = right_node.evaluate(symbol_table)
 
-        if self.value == '+':
-            return left + right
+        if self.value == '..':
+            return str(left) + str(right)
 
-        if self.value == '-':
-            return left - right
+        if isinstance(left, int) and isinstance(right, int):
+            if self.value == '+':
+                return left + right
 
-        if self.value == '*':
-            return left * right
+            if self.value == '-':
+                return left - right
 
-        if self.value == '/':
-            return left // right
+            if self.value == '*':
+                return left * right
 
+            if self.value == '/':
+                if right == 0:
+                    raise ZeroDivisionError('Division by zero')
+
+                return left // right
+
+        if not isinstance(left, type(right)):
+            raise TypeError(f'Cannot perform operation on "{type(left)}" and "{type(right)}"')
+        
         if self.value == '==':
             return int(left == right)
 
@@ -56,9 +66,6 @@ class BinOp(Node):
 
         if self.value == 'or':
             return left or right
-
-        if self.value == '..':
-            return str(left) + str(right)
 
         raise ValueError(f'Invalid operator "{self.value}"')
 
@@ -105,8 +112,10 @@ class IdentifierNode(Node):
     def evaluate(self, symbol_table: SymbolTable) -> int:
         key: str = self.value
         value: int = symbol_table.get(key)
+
         if value is None:
             raise ValueError(f'Undefined variable "{key}"')
+
         return value
 
 
@@ -114,8 +123,13 @@ class Assignment(Node):
     def evaluate(self, symbol_table: SymbolTable) -> int:
         key: str = self.children[0]
         value: int = self.children[1].evaluate(symbol_table)
+
         if not isinstance(value, (int, str)):
             raise ValueError(f'Invalid value "{value}"')
+
+        if key not in symbol_table.table.keys():
+            raise NameError(f'Undefined variable "{key}"')
+
         symbol_table.set(key, value)
         return value
 
@@ -123,6 +137,10 @@ class Assignment(Node):
 class VarDeclaration(Node):
     def evaluate(self, symbol_table: SymbolTable) -> None:
         key: str = self.children[0]
+
+        if key in symbol_table.table.keys():
+            raise ValueError(f'Variable "{key}" already declared')
+
         value: any = self.children[1].evaluate(symbol_table) if self.children[1] is not None else None
         symbol_table.set(key, value)
 

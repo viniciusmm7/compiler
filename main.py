@@ -11,6 +11,8 @@ def main() -> None:
     parser: Parser = Parser()
     ast: Node = parser.run(code)
     result: any = SemanticAnalyser.run(ast, symbol_table)
+    if None in symbol_table.table.values():
+        raise ValueError('Variable declared but not initialized')
 
 
 if __name__ == '__main__':
