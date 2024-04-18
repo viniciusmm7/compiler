@@ -51,6 +51,19 @@ class Tokenizer:
                 self.position += 1
                 continue
 
+            if self.source[self.position] in ['"', "'"]:
+                quote = self.source[self.position]
+                self.position += 1
+
+                string = ''
+                while self.position < len(self.source) and self.source[self.position] != quote:
+                    string += self.source[self.position]
+                    self.position += 1
+
+                self.next = Token('STRING', string)
+                self.position += 1
+                return
+
             if self.source[self.position].isalpha():
                 start = self.position
 
@@ -59,15 +72,6 @@ class Tokenizer:
                     self.position += 1
 
                 token_value: str = self.source[start:self.position]
-
-                single_quote_string: bool = token_value[0] == "'" and token_value[-1] == "'"
-                double_quote_string: bool = token_value[0] == '"' and token_value[-1] == '"'
-                if single_quote_string or double_quote_string:
-                    self.next = Token('STRING', token_value[1:-1])
-                    return
-
-                if "'" in token_value or '"' in token_value:
-                    raise LexicalError(f'Invalid token "{token_value}" at position {start}')
 
                 if token_value in self.keywords:
                     self.next = Token(token_value.upper(), token_value)
@@ -139,7 +143,7 @@ class Tokenizer:
                 self.position += 1
                 return
 
-            if self.source[self.position] == '..':
+            if self.source[self.position:self.position + 2] == '..':
                 self.next = Token('CONCAT', '..')
                 self.position += 2
                 return

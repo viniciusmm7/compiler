@@ -43,13 +43,13 @@ class BinOp(Node):
             return left // right
 
         if self.value == '==':
-            return left == right
+            return int(left == right)
 
         if self.value == '>':
-            return left > right
+            return int(left > right)
 
         if self.value == '<':
-            return left < right
+            return int(left < right)
 
         if self.value == 'and':
             return left and right
@@ -58,9 +58,7 @@ class BinOp(Node):
             return left or right
 
         if self.value == '..':
-            if isinstance(left, str) and isinstance(right, str):
-                return left + right
-            raise TypeError(f'Expected string at "{left}" and "{right}", got "{type(left)}" and "{type(right)}"')
+            return str(left) + str(right)
 
         raise ValueError(f'Invalid operator "{self.value}"')
 
@@ -116,7 +114,7 @@ class Assignment(Node):
     def evaluate(self, symbol_table: SymbolTable) -> int:
         key: str = self.children[0]
         value: int = self.children[1].evaluate(symbol_table)
-        if not isinstance(value, int):
+        if not isinstance(value, (int, str)):
             raise ValueError(f'Invalid value "{value}"')
         symbol_table.set(key, value)
         return value
@@ -125,7 +123,7 @@ class Assignment(Node):
 class VarDeclaration(Node):
     def evaluate(self, symbol_table: SymbolTable) -> None:
         key: str = self.children[0]
-        value: any = self.children[1].evaluate(symbol_table) if len(self.children) > 1 else None
+        value: any = self.children[1].evaluate(symbol_table) if self.children[1] is not None else None
         symbol_table.set(key, value)
 
 
