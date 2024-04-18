@@ -8,15 +8,19 @@
 ## EBNF:
 ```
 BLOCK = {STATEMENT} ;
-STATEMENT = ( | (IDENTIFIER, "=", BOOL_EXPRESSION) | ("print", "(", BOOL_EXPRESSION, ")") | (("while", BOOL_EXPRESSION, "do", "\n", {STATEMENT}) | ("if", BOOL_EXPRESSION, "then", "\n", {STATEMENT}, (("else", {STATEMENT} | )))), "end"), "\n" ;
+STATEMENT = ( | "identifier", "=", BOOL_EXPRESSION | "local", "identifier", ( | "=", BOOL_EXPRESSION) | "print", "(", BOOL_EXPRESSION, ")" | ("while", BOOL_EXPRESSION, "do", "\n", {STATEMENT} | "if", BOOL_EXPRESSION, "then", "\n", {STATEMENT}, (("else", {STATEMENT} | ))), "end"), "\n" ;
 BOOL_EXPRESSION = BOOL_TERM, {"or", BOOL_TERM} ;
 BOOL_TERM = RELATIONAL_EXPRESSION, {"and", RELATIONAL_EXPRESSION} ;
 RELATIONAL_EXPRESSION = EXPRESSION, {("==" | ">" | "<"), EXPRESSION} ;
-EXPRESSION = TERM, {("+" | "-"), TERM} ;
+EXPRESSION = TERM, {("+" | "-" | ".."), TERM} ;
 TERM = FACTOR, {("*" | "/"), FACTOR} ;
-FACTOR = NUMBER | IDENTIFIER | ("+" | "-" | "not"), FACTOR | "(", BOOL_EXPRESSION, ")" | "read()" ;
+FACTOR = "number" | "string" | "identifier" | ("+" | "-" | "not"), FACTOR | "(", BOOL_EXPRESSION, ")" | "read()" ;
+
 IDENTIFIER = LETTER, {LETTER | DIGIT | "_"} ;
 NUMBER = DIGIT, {DIGIT} ;
+STRING = """, {CHARACTER}, """ ;
+CHARACTER = LETTER | DIGIT | SYMBOL | " " ;
 LETTER = "a".."z" | "A".."Z" ;
 DIGIT = 0..9 ;
+SYMBOL = "!" | "@" | "#" | "$" | "%" | "&" | "*" | "(" | ")" | "-" | "+" | "=" | "[" | "]" | "{" | "}" | ";" | ":" | "," | "." | "<" | ">" | "/" | "?" | "|" | "\" | "'" | "`" | "~" | "^" | "_" ;
 ```
