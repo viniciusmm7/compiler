@@ -37,6 +37,7 @@ class Tokenizer:
             'else',
             'not',
             'read',
+            'local',
             }
 
     def select_next(self) -> None:
@@ -59,12 +60,20 @@ class Tokenizer:
 
                 token_value: str = self.source[start:self.position]
 
+                single_quote_string: bool = token_value[0] == "'" and token_value[-1] == "'"
+                double_quote_string: bool = token_value[0] == '"' and token_value[-1] == '"'
+                if single_quote_string or double_quote_string:
+                    self.next = Token('STRING', token_value[1:-1])
+                    return
+
+                if "'" in token_value or '"' in token_value:
+                    raise LexicalError(f'Invalid token "{token_value}" at position {start}')
+
                 if token_value in self.keywords:
                     self.next = Token(token_value.upper(), token_value)
+                    return
 
-                else:
-                    self.next = Token('IDENTIFIER', token_value)
-
+                self.next = Token('IDENTIFIER', token_value)
                 return
 
             if self.source[self.position].isdigit():
@@ -128,6 +137,11 @@ class Tokenizer:
             if self.source[self.position] == '<':
                 self.next = Token('LESSTHAN', '<')
                 self.position += 1
+                return
+
+            if self.source[self.position] == '..':
+                self.next = Token('CONCAT', '..')
+                self.position += 2
                 return
 
             if self.source[self.position] == '\n':

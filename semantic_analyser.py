@@ -27,35 +27,40 @@ class BinOp(Node):
         left_node: Node = self.children[0]
         right_node: Node = self.children[1]
 
-        left: int = left_node.evaluate(symbol_table)
-        right: int = right_node.evaluate(symbol_table)
+        left: any = left_node.evaluate(symbol_table)
+        right: any = right_node.evaluate(symbol_table)
 
         if self.value == '+':
             return left + right
 
-        elif self.value == '-':
+        if self.value == '-':
             return left - right
 
-        elif self.value == '*':
+        if self.value == '*':
             return left * right
 
-        elif self.value == '/':
+        if self.value == '/':
             return left // right
 
-        elif self.value == '==':
+        if self.value == '==':
             return left == right
 
-        elif self.value == '>':
+        if self.value == '>':
             return left > right
 
-        elif self.value == '<':
+        if self.value == '<':
             return left < right
 
-        elif self.value == 'and':
+        if self.value == 'and':
             return left and right
 
-        elif self.value == 'or':
+        if self.value == 'or':
             return left or right
+
+        if self.value == '..':
+            if isinstance(left, str) and isinstance(right, str):
+                return left + right
+            raise TypeError(f'Expected string at "{left}" and "{right}", got "{type(left)}" and "{type(right)}"')
 
         raise ValueError(f'Invalid operator "{self.value}"')
 
@@ -85,6 +90,14 @@ class IntVal(Node):
         return self.value
 
 
+class StrVal(Node):
+    def evaluate(self, symbol_table: SymbolTable) -> str:
+        if not isinstance(self.value, str):
+            raise ValueError(f'Invalid value "{self.value}"')
+
+        return self.value
+
+
 class NoOp(Node):
     def evaluate(self, symbol_table: SymbolTable) -> None:
         pass
@@ -107,6 +120,13 @@ class Assignment(Node):
             raise ValueError(f'Invalid value "{value}"')
         symbol_table.set(key, value)
         return value
+
+
+class VarDeclaration(Node):
+    def evaluate(self, symbol_table: SymbolTable) -> None:
+        key: str = self.children[0]
+        value: any = self.children[1].evaluate(symbol_table) if len(self.children) > 1 else None
+        symbol_table.set(key, value)
 
 
 class PrintNode(Node):
@@ -152,5 +172,5 @@ class ReadNode(Node):
 
 class SemanticAnalyser:
     @staticmethod
-    def run(ast: Node, symbol_table: SymbolTable = SymbolTable()) -> int:
+    def run(ast: Node, symbol_table: SymbolTable = SymbolTable()) -> any:
         return ast.evaluate(symbol_table)

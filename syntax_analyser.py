@@ -3,12 +3,21 @@ from semantic_analyser import *
 
 
 class Parser:
+    tokenizer = None
+
     @staticmethod
-    def parse_factor(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Node:
+    def parse_factor() -> Node:
+        tokenizer: Tokenizer = Parser.tokenizer
+
         if tokenizer.next.type == 'INT':
             token = tokenizer.next.value
             tokenizer.select_next()
             return IntVal(token, [])
+
+        if tokenizer.next.type == 'STRING':
+            token = tokenizer.next.value
+            tokenizer.select_next()
+            return StrVal(token, [])
 
         elif tokenizer.next.type == 'IDENTIFIER':
             identifier = tokenizer.next.value
@@ -18,11 +27,11 @@ class Parser:
         elif tokenizer.next.type in ['PLUS', 'MINUS', 'NOT']:
             token = tokenizer.next.value
             tokenizer.select_next()
-            return UnOp(token, [Parser.parse_factor(tokenizer, symbol_table)])
+            return UnOp(token, [Parser.parse_factor()])
 
         elif tokenizer.next.type == 'LPAREN':
             tokenizer.select_next()
-            result: Node = Parser.parse_bool_expression(tokenizer, symbol_table)
+            result: Node = Parser.parse_bool_expression()
 
             if tokenizer.next.type == 'RPAREN':
                 tokenizer.select_next()
@@ -50,62 +59,68 @@ class Parser:
         raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
 
     @staticmethod
-    def parse_term(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Node:
-        result: Node = Parser.parse_factor(tokenizer, symbol_table)
+    def parse_term() -> Node:
+        tokenizer: Tokenizer = Parser.tokenizer
+        result: Node = Parser.parse_factor()
 
         while tokenizer.next.type in ['MULT', 'DIV']:
             token = tokenizer.next.value
             tokenizer.select_next()
-            result = BinOp(token, [result, Parser.parse_factor(tokenizer, symbol_table)])
+            result = BinOp(token, [result, Parser.parse_factor()])
 
         return result
 
     @staticmethod
-    def parse_expression(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Node:
-        result: Node = Parser.parse_term(tokenizer, symbol_table)
+    def parse_expression() -> Node:
+        tokenizer: Tokenizer = Parser.tokenizer
+        result: Node = Parser.parse_term()
 
-        while tokenizer.next.type in ['PLUS', 'MINUS']:
+        while tokenizer.next.type in ['PLUS', 'MINUS', 'CONCAT']:
             token = tokenizer.next.value
             tokenizer.select_next()
-            result = BinOp(token, [result, Parser.parse_term(tokenizer, symbol_table)])
+            result = BinOp(token, [result, Parser.parse_term()])
 
         return result
     
     @staticmethod
-    def parse_relational_expression(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Node:
-        result: Node = Parser.parse_expression(tokenizer, symbol_table)
+    def parse_relational_expression() -> Node:
+        tokenizer: Tokenizer = Parser.tokenizer
+        result: Node = Parser.parse_expression()
         
         while tokenizer.next.type in ['EQUAL', 'GREATERTHAN', 'LESSTHAN']:
             token = tokenizer.next.value
             tokenizer.select_next()
-            result = BinOp(token, [result, Parser.parse_expression(tokenizer, symbol_table)])
+            result = BinOp(token, [result, Parser.parse_expression()])
 
         return result
     
     @staticmethod
-    def parse_bool_term(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Node:
-        result: Node = Parser.parse_relational_expression(tokenizer, symbol_table)
+    def parse_bool_term() -> Node:
+        tokenizer: Tokenizer = Parser.tokenizer
+        result: Node = Parser.parse_relational_expression()
 
         while tokenizer.next.type == 'AND':
             token = tokenizer.next.value
             tokenizer.select_next()
-            result = BinOp(token, [result, Parser.parse_relational_expression(tokenizer, symbol_table)])
+            result = BinOp(token, [result, Parser.parse_relational_expression()])
 
         return result
 
     @staticmethod
-    def parse_bool_expression(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Node:
-        result: Node = Parser.parse_bool_term(tokenizer, symbol_table)
+    def parse_bool_expression() -> Node:
+        tokenizer: Tokenizer = Parser.tokenizer
+        result: Node = Parser.parse_bool_term()
         
         while tokenizer.next.type == 'OR':
             token = tokenizer.next.value
             tokenizer.select_next()
-            result = BinOp(token, [result, Parser.parse_bool_term(tokenizer, symbol_table)])
+            result = BinOp(token, [result, Parser.parse_bool_term()])
             
         return result
 
     @staticmethod
-    def parse_statement(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Node:
+    def parse_statement() -> Node:
+        tokenizer: Tokenizer = Parser.tokenizer
         if tokenizer.next.type == 'NEWLINE':
             tokenizer.select_next()
             return NoOp(None, [])
@@ -117,7 +132,7 @@ class Parser:
             if tokenizer.next.type == 'ASSIGN':
                 assignment_token = tokenizer.next.value
                 tokenizer.select_next()
-                expression = Parser.parse_bool_expression(tokenizer, symbol_table)
+                expression = Parser.parse_bool_expression()
 
                 if tokenizer.next.type in ['NEWLINE', 'EOF']:
                     return Assignment(assignment_token, [identifier, expression])
@@ -126,13 +141,30 @@ class Parser:
 
             raise SyntaxError(f'"{identifier}" is missing assignment operator at position "{tokenizer.position}"')
 
+        elif tokenizer.next.type == 'LOCAL':
+            tokenizer.select_next()
+
+            if tokenizer.next.type == 'IDENTIFIER':
+                identifier = tokenizer.next.value
+                tokenizer.select_next()
+                expression = None
+
+                if tokenizer.next.type == 'ASSIGN':
+                    tokenizer.select_next()
+                    expression = Parser.parse_bool_expression()
+
+                if tokenizer.next.type in ['NEWLINE', 'EOF']:
+                    return VarDeclaration('LOCAL', [identifier, expression])
+
+                raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
+
         elif tokenizer.next.type == 'PRINT':
             token = tokenizer.next.value
             tokenizer.select_next()
 
             if tokenizer.next.type == 'LPAREN':
                 tokenizer.select_next()
-                expression = Parser.parse_bool_expression(tokenizer, symbol_table)
+                expression = Parser.parse_bool_expression()
 
                 if tokenizer.next.type == 'RPAREN':
                     tokenizer.select_next()
@@ -148,7 +180,7 @@ class Parser:
                     
         elif tokenizer.next.type == 'IF':
             tokenizer.select_next()
-            condition = Parser.parse_bool_expression(tokenizer, symbol_table)
+            condition = Parser.parse_bool_expression()
             children = [
                 condition,
                 BlockNode('IF_BLOCK', []),
@@ -163,7 +195,7 @@ class Parser:
                     tokenizer.select_next()
 
                     while tokenizer.next.type not in ['END', 'ELSE']:
-                        if_statement = Parser.parse_statement(tokenizer, symbol_table)
+                        if_statement = Parser.parse_statement()
                         if_node.children[1].children.append(if_statement)
 
                         if tokenizer.next.type not in ['END', 'ELSE']:
@@ -176,7 +208,7 @@ class Parser:
                             tokenizer.select_next()
 
                             while tokenizer.next.type != 'END':
-                                else_statement = Parser.parse_statement(tokenizer, symbol_table)
+                                else_statement = Parser.parse_statement()
                                 if_node.children[2].children.append(else_statement)
                                 tokenizer.select_next()
 
@@ -197,7 +229,7 @@ class Parser:
 
         elif tokenizer.next.type == 'WHILE':
             tokenizer.select_next()
-            condition = Parser.parse_bool_expression(tokenizer, symbol_table)
+            condition = Parser.parse_bool_expression()
             children = [
                 condition,
                 BlockNode('WHILE_BLOCK', [])
@@ -211,7 +243,7 @@ class Parser:
                     tokenizer.select_next()
 
                     while tokenizer.next.type != 'END':
-                        statement = Parser.parse_statement(tokenizer, symbol_table)
+                        statement = Parser.parse_statement()
                         while_node.children[1].children.append(statement)
                         tokenizer.select_next()
 
@@ -230,27 +262,28 @@ class Parser:
         raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
 
     @staticmethod
-    def parse_block(tokenizer: Tokenizer, symbol_table: SymbolTable) -> Node:
+    def parse_block() -> Node:
+        tokenizer: Tokenizer = Parser.tokenizer
         result = BlockNode('BLOCK', [])
 
         while tokenizer.next.type != 'EOF':
-            result.children.append(Parser.parse_statement(tokenizer, symbol_table))
+            result.children.append(Parser.parse_statement())
 
         return result
 
     @staticmethod
-    def run(code: str, symbol_table: SymbolTable) -> Node:
+    def run(code: str) -> Node:
         if not code:
             raise ValueError('The code cannot be empty')
 
         code = PrePro.filter(code)
 
-        tokenizer: Tokenizer = Tokenizer(code)
-        tokenizer.select_next()
+        Parser.tokenizer = Tokenizer(code)
+        Parser.tokenizer.select_next()
 
-        result = Parser.parse_block(tokenizer, symbol_table)
+        result = Parser.parse_block()
 
-        if tokenizer.next.type != 'EOF':
-            raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
+        if Parser.tokenizer.next.type != 'EOF':
+            raise SyntaxError(f'Invalid syntax at position "{Parser.tokenizer.position}"')
 
         return result

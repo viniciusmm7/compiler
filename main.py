@@ -8,8 +8,9 @@ def main() -> None:
         code = file.read()
 
     symbol_table: SymbolTable = SymbolTable()
-    ast: Node = Parser.run(code, symbol_table)
-    result: int = SemanticAnalyser.run(ast, symbol_table)
+    parser: Parser = Parser()
+    ast: Node = parser.run(code)
+    result: any = SemanticAnalyser.run(ast, symbol_table)
 
 
 if __name__ == '__main__':
