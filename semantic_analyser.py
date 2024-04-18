@@ -49,9 +49,15 @@ class BinOp(Node):
 
                 return left // right
 
+        if self.value == 'and':
+            return left and right
+
+        if self.value == 'or':
+            return left or right
+
         if not isinstance(left, type(right)):
             raise TypeError(f'Cannot perform operation on "{type(left)}" and "{type(right)}"')
-        
+
         if self.value == '==':
             return int(left == right)
 
@@ -60,12 +66,6 @@ class BinOp(Node):
 
         if self.value == '<':
             return int(left < right)
-
-        if self.value == 'and':
-            return left and right
-
-        if self.value == 'or':
-            return left or right
 
         raise ValueError(f'Invalid operator "{self.value}"')
 
