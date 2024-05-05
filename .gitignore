@@ -163,8 +163,9 @@ cython_debug/
 *.lua
 
 # Assembly files
-header.asm
-footer.asm
+*.asm
+!header.asm
+!footer.asm
 model.asm
 example.asm
 
