@@ -162,5 +162,14 @@ cython_debug/
 # Lua file test
 *.lua
 
+# Assembly files
+header.asm
+footer.asm
+model.asm
+example.asm
+
+# Test files
+*test*
+
 # PyCharm folder
 .idea/
