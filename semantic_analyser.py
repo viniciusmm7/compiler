@@ -5,10 +5,10 @@ DWORD: int = 4
 
 class SymbolTable:
     def __init__(self) -> None:
-        self.table: dict[str, tuple[int, bool]] = {}
+        self.table: dict[str, tuple] = {}
         self.num_vars: int = 0
 
-    def get(self, key: str) -> tuple[int, bool]:
+    def get(self, key: str) -> tuple:
         return self.table.get(key)
 
     def set(self, key: str, value: bool) -> int:
@@ -16,7 +16,7 @@ class SymbolTable:
             self.num_vars += 1
             ebp_diff: int = DWORD * self.num_vars
         else:
-            st_tuple: tuple[int, bool] = self.table.get(key)
+            st_tuple: tuple = self.table.get(key)
             ebp_diff: int = st_tuple[0]
 
         self.table[key] = (ebp_diff, value)
@@ -151,7 +151,7 @@ class NoOp(Node):
 class IdentifierNode(Node):
     def evaluate(self, symbol_table: SymbolTable) -> str:
         key: str = self.value
-        st_tuple: tuple[int, bool] = symbol_table.get(key)
+        st_tuple: tuple = symbol_table.get(key)
         ebp_diff: int = st_tuple[0]
         # value: int = st_tuple[1]
         #
