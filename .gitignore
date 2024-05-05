@@ -166,8 +166,6 @@ cython_debug/
 *.asm
 !header.asm
 !footer.asm
-model.asm
-example.asm
 
 # Test files
 *test*
