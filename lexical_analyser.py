@@ -38,6 +38,8 @@ class Tokenizer:
             'not',
             'read',
             'local',
+            'function',
+            'return',
             }
 
     def select_next(self) -> None:
