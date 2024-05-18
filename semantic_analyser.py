@@ -216,30 +216,30 @@ class FuncCall(Node):
         if func_node is None:
             raise ValueError(f'Function "{self.value}" not declared')
 
-        if len(self.children) != len(func_node.children) - 2:
-            raise ValueError(f'Function "{self.value}" expects {len(func_node.children) - 2} arguments, got {len(self.children)}')
-
         local_st: SymbolTable = SymbolTable()
         arguments: list[Node] = func_node.children[1:-1]
-        for arg, value in zip(arguments, self.children):
-            local_st.set(arg.children[0], value.evaluate(symbol_table))
 
-        for i, arg in enumerate(self.children):
-            local_st.set(func_node.children[i + 1].children[0], arg.evaluate(symbol_table))
+        for arg, value in zip(arguments, self.children, strict=True):
+            local_st.set(arg.children[0], value.evaluate(symbol_table))
 
         block: Node = func_node.children[-1]
         block.evaluate(local_st)
 
-        return_value: any = block.children[-2].children[0].value
-        result: any = local_st.get(return_value)
-        return result
+        return_node: Node = block.children[-2]
+
+        if return_node.value is None:
+            return None
+
+        if return_node.value in func_table.table.keys():
+            return func_table.get(return_node.value)
+
+        return local_st.get(return_node.value)
 
 
 class ReturnNode(Node):
-    def evaluate(self, symbol_table: SymbolTable) -> any:
+    def evaluate(self, symbol_table: SymbolTable) -> None:
         expression: Node = self.children[0]
-        return_value: any = symbol_table.get(expression.value)
-        return return_value
+        symbol_table.set(self.value, expression.evaluate(symbol_table))
 
 
 class SemanticAnalyser:
