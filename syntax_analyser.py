@@ -22,6 +22,27 @@ class Parser:
         elif tokenizer.next.type == 'IDENTIFIER':
             identifier = tokenizer.next.value
             tokenizer.select_next()
+
+            if tokenizer.next.type == 'LPAREN':
+                tokenizer.select_next()
+                children = []
+
+                while tokenizer.next.type != 'RPAREN':
+                    expression = Parser.parse_bool_expression()
+                    children.append(expression)
+
+                    if tokenizer.next.type == 'COMMA':
+                        tokenizer.select_next()
+
+                        if tokenizer.next.type == 'RPAREN':
+                            raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
+
+                    if tokenizer.next.type in ['NEWLINE', 'EOF']:
+                        raise SyntaxError(f'Missing right parenthesis when calling function at position "{tokenizer.position}"')
+
+                tokenizer.select_next()
+                return FuncCall(identifier, children)
+
             return IdentifierNode(identifier, [])
 
         elif tokenizer.next.type in ['PLUS', 'MINUS', 'NOT']:
@@ -139,7 +160,31 @@ class Parser:
 
                 raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
 
-            raise SyntaxError(f'"{identifier}" is missing assignment operator at position "{tokenizer.position}"')
+            if tokenizer.next.type == 'LPAREN':
+                tokenizer.select_next()
+                children = []
+
+                while tokenizer.next.type != 'RPAREN':
+                    expression = Parser.parse_bool_expression()
+                    children.append(expression)
+
+                    if tokenizer.next.type == 'COMMA':
+                        tokenizer.select_next()
+
+                        if tokenizer.next.type == 'RPAREN':
+                            raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
+
+                if tokenizer.next.type == 'RPAREN':
+                    tokenizer.select_next()
+
+                    if tokenizer.next.type in ['NEWLINE', 'EOF']:
+                        return FuncCall(identifier, children)
+
+                    raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
+
+                raise SyntaxError(f'Missing right parenthesis when calling function at position "{tokenizer.position}"')
+
+            raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
 
         elif tokenizer.next.type == 'LOCAL':
             tokenizer.select_next()
@@ -258,6 +303,68 @@ class Parser:
                 raise SyntaxError(f'Must have a line break after "do" at position "{tokenizer.position}"')
 
             raise SyntaxError(f'Expected "do" at position "{tokenizer.position}", found "{tokenizer.next.value}"')
+
+        elif tokenizer.next.type == 'FUNCTION':
+            tokenizer.select_next()
+
+            if tokenizer.next.type == 'IDENTIFIER':
+                identifier = tokenizer.next.value
+                children = [identifier]
+                tokenizer.select_next()
+
+                if tokenizer.next.type == 'LPAREN':
+                    tokenizer.select_next()
+
+                    while tokenizer.next.type != 'RPAREN':
+                        if tokenizer.next.type == 'IDENTIFIER':
+                            parameter = tokenizer.next.value
+                            var_dec = VarDeclaration('FUNC_PARAM', [parameter, None])
+                            children.append(var_dec)
+                            tokenizer.select_next()
+
+                            if tokenizer.next.type == 'COMMA':
+                                tokenizer.select_next()
+
+                                if tokenizer.next.type == 'RPAREN':
+                                    raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
+
+                    tokenizer.select_next()
+
+                    if tokenizer.next.type == 'NEWLINE':
+                        block = BlockNode('FUNCTION_BLOCK', [])
+                        tokenizer.select_next()
+
+                        while tokenizer.next.type != 'END':
+                            statement = Parser.parse_statement()
+                            block.children.append(statement)
+
+                        children.append(block)
+
+                        if tokenizer.next.type == 'END':
+                            func_dec = FuncDec('FUNCTION', children)
+                            tokenizer.select_next()
+
+                            if tokenizer.next.type in ['NEWLINE', 'EOF']:
+                                return func_dec
+
+                            raise SyntaxError(f'Function declaration must terminate with "end" at position "{tokenizer.position}"')
+
+                        raise SyntaxError(f'Function declaration must terminate with "end" at position "{tokenizer.position}"')
+
+                    raise SyntaxError(f'Must have a line break after function parameters at position "{tokenizer.position}"')
+
+                raise SyntaxError(f'Missing right parenthesis when declaring function at position "{tokenizer.position}"')
+
+            raise SyntaxError(f'Missing function identifier at position "{tokenizer.position}"')
+
+        elif tokenizer.next.type == 'RETURN':
+            tokenizer.select_next()
+            expression = Parser.parse_bool_expression()
+
+            if tokenizer.next.type in ['NEWLINE', 'EOF']:
+                return ReturnNode('RETURN', [expression])
+
+            raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
 
         raise SyntaxError(f'Invalid syntax at position "{tokenizer.position}"')
 
