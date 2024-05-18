@@ -145,6 +145,11 @@ class Tokenizer:
                 self.position += 1
                 return
 
+            if self.source[self.position] == ',':
+                self.next = Token('COMMA', ',')
+                self.position += 1
+                return
+
             if self.source[self.position:self.position + 2] == '..':
                 self.next = Token('CONCAT', '..')
                 self.position += 2
