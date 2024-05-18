@@ -12,6 +12,20 @@ class SymbolTable:
         self.table[key] = value
 
 
+class FuncTable:
+    def __init__(self) -> None:
+        self.table: dict[str, any] = {}
+
+    def get(self, key: str) -> any:
+        return self.table.get(key)
+
+    def set(self, key: str, value: any) -> None:
+        self.table[key] = value
+
+
+func_table: FuncTable = FuncTable()
+
+
 class Node(ABC):
     def __init__(self, value: any, children: list) -> None:
         self.value: any = value
@@ -184,6 +198,48 @@ class ReadNode(Node):
     def evaluate(self, symbol_table: SymbolTable) -> int:
         value: int = int(input())
         return value
+
+
+class FuncDec(Node):
+    def evaluate(self, symbol_table: SymbolTable) -> None:
+        identifier: str = self.children[0]
+
+        if func_table.get(identifier) is not None:
+            raise ValueError(f'Function "{identifier}" already declared')
+
+        func_table.set(identifier, self)
+
+
+class FuncCall(Node):
+    def evaluate(self, symbol_table: SymbolTable) -> any:
+        func_node: Node = func_table.get(self.value)
+        if func_node is None:
+            raise ValueError(f'Function "{self.value}" not declared')
+
+        if len(self.children) != len(func_node.children) - 2:
+            raise ValueError(f'Function "{self.value}" expects {len(func_node.children) - 2} arguments, got {len(self.children)}')
+
+        local_st: SymbolTable = SymbolTable()
+        arguments: list[Node] = func_node.children[1:-1]
+        for arg, value in zip(arguments, self.children):
+            local_st.set(arg.children[0], value.evaluate(symbol_table))
+
+        for i, arg in enumerate(self.children):
+            local_st.set(func_node.children[i + 1].children[0], arg.evaluate(symbol_table))
+
+        block: Node = func_node.children[-1]
+        block.evaluate(local_st)
+
+        return_value: any = block.children[-2].children[0].value
+        result: any = local_st.get(return_value)
+        return result
+
+
+class ReturnNode(Node):
+    def evaluate(self, symbol_table: SymbolTable) -> any:
+        expression: Node = self.children[0]
+        return_value: any = symbol_table.get(expression.value)
+        return return_value
 
 
 class SemanticAnalyser:
