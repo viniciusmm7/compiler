@@ -219,7 +219,10 @@ class FuncCall(Node):
         local_st: SymbolTable = SymbolTable()
         arguments: list[Node] = func_node.children[1:-1]
 
-        for arg, value in zip(arguments, self.children, strict=True):
+        if len(arguments) != len(self.children):
+            raise ValueError(f'Function "{self.value}" expects {len(arguments)} arguments, got {len(self.children)}')
+
+        for arg, value in zip(arguments, self.children):
             local_st.set(arg.children[0], value.evaluate(symbol_table))
 
         block: Node = func_node.children[-1]
