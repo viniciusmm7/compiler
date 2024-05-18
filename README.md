@@ -9,7 +9,7 @@
 ```
 BLOCK = {STATEMENT} ;
 STATEMENT = ( 
-    | IDENTIFIER, "=", BOOL_EXPRESSION
+    | IDENTIFIER, ("=", BOOL_EXPRESSION | "(", ( | BOOL_EXPRESSION, {",", BOOL_EXPRESSION}), ")")
     | "local", IDENTIFIER, ( | "=", BOOL_EXPRESSION)
     | "print", "(", BOOL_EXPRESSION, ")"
     | "return", BOOL_EXPRESSION
@@ -26,7 +26,7 @@ EXPRESSION = TERM, {("+" | "-" | ".."), TERM} ;
 TERM = FACTOR, {("*" | "/"), FACTOR} ;
 FACTOR = NUMBER
     | STRING
-    | IDENTIFIER
+    | IDENTIFIER, ( | "(", ( | BOOL_EXPRESSION, {",", BOOL_EXPRESSION}), ")")
     | ("+" | "-" | "not"), FACTOR
     | "(", BOOL_EXPRESSION, ")"
     | "read()" ;
